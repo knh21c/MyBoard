@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="query">
+
+	<resultMap id="ArticleMap" type="net.myboard.value.Article">
+		<result property="id" column="id" />
+		<result property="subject" column="subject" />
+		<result property="author" column="author" />
+		<result property="date" column="date" />
+		<result property="hit" column="hit" />
+		<result property="content" column="content" />
+	</resultMap>
+	
+	<resultMap id="CommentMap" type="net.myboard.value.Comment">
+		<result property="id" column="id" />
+		<result property="comment" column="comment"/>
+	</resultMap>
+	
+	<resultMap id="BoardFileMap" type="net.myboard.value.BoardFile">
+		<result property="id" column="id" />
+		<result property="fileName" column="fileName" />
+		<result property="fileSize" column="fileSize" />
+		<result property="contentType" column="contentType" />
+		<result property="tempFileName" column="tempFileName" />
+		
+	</resultMap>
+	
+    <insert id="insert" parameterType="article" useGeneratedKeys="true">
+    	INSERT INTO board (pw, subject, author, date, hit, content) VALUES (HEX(AES_ENCRYPT(#{pw}, 'knh21c')), #{subject}, #{author}, NOW(), #{hit}, #{content})
+    </insert>
+    
+    <insert id="insertFile" parameterType="boardFile">
+    	INSERT INTO boardFile (id, fileName, fileSize, contentType, tempFileName) VALUES(#{id}, #{fileName}, #{fileSize}, #{contentType}, #{tempFileName})
+    </insert>
+    
+    <select id="lastIndex" resultType="Integer">
+        SELECT LAST_INSERT_ID()
+    </select>
+    
+    <update id="update" parameterType="article">
+    	UPDATE board SET subject=#{subject}, author=#{author}, hit=#{hit}, content=#{content} WHERE id=#{id}
+    </update>
+    
+    <update id="updateHit" parameterType="article">
+    	UPDATE board SET hit=#{hit} WHERE id=#{id} 
+    </update>
+    
+    <update id="updateContent" parameterType="article">
+    	UPDATE board SET content=#{content} WHERE id=#{id} 
+    </update>
+    
+    <delete id="delete" parameterType="article">
+    	DELETE FROM board WHERE id = #{id}
+    </delete>
+    
+    <select id="select" parameterType="article" resultType="article">
+    	SELECT * FROM board WHERE id = #{id}
+    </select>
+    
+    <select id="selectPw" parameterType="article" resultType="String">
+    	SELECT AES_DECRYPT(UNHEX(pw), 'knh21c') FROM board where id = #{id}
+    </select>
+    
+   	<select id="selectAll" resultMap="ArticleMap">
+   		SELECT * FROM board
+   	</select>
+   	
+   	<select id="test" resultType="Integer">
+   		SELECT COUNT(*) FROM board
+   	</select>
+   	
+   	<select id="selectComments" parameterType="comment" resultMap="CommentMap">
+    	SELECT * FROM comments WHERE id= #{id}
+    </select>
+    
+    <insert id="insertComment" parameterType="comment">
+    	INSERT INTO comments (id, comment) VALUES (#{id}, #{comment})
+    </insert>
+    
+    <delete id="deleteComment" parameterType="comment">
+    	DELETE FROM comments WHERE id = #{id}
+    </delete>
+    
+    <select id="searchTotal" parameterType="String" resultMap="ArticleMap">
+    	SELECT * FROM board WHERE subject LIKE #{key} or author LIKE #{key} or content LIKE #{key}
+    </select>
+    
+    <select id="searchSubject" parameterType="String" resultMap="ArticleMap">
+    	SELECT * FROM board WHERE subject LIKE #{key}
+    </select>
+    
+    <select id="searchAuthor" parameterType="String" resultMap="ArticleMap">
+    	SELECT * FROM board WHERE author LIKE #{key}
+    </select>
+    
+    <select id="searchContent" parameterType="String" resultMap="ArticleMap">
+    	SELECT * FROM board WHERE content LIKE #{key}
+    </select>
+    
+    <select id="selectFile" parameterType="Integer" resultMap="BoardFileMap">
+    	SELECT * FROM boardFile WHERE id = #{id}
+    </select>
+    
+    <delete id="deleteAllBoard">
+    	DELETE FROM board
+    </delete>
+    
+    <delete id="deleteAllComments">
+    	DELETE FROM comments
+    </delete>
+    
+    <delete id="deleteAllBoardFile">
+    	DELETE FROM boardFile
+    </delete>
+</mapper>
